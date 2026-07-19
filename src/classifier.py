@@ -33,6 +33,24 @@ Puanlama rehberi:
 - 3-5: Dolaylı ilgi (Türkiye gündemi ama Almanya'daki Türklere pratik etkisi yok)
 - 1-2: İlgisiz (keyword tesadüfen geçmiş)
 
+Özel kural — şehir çapında MEGA olaylar:
+Sayfa Münih'te yaşayanlara hitap ettiği için, Türk bağlantısı OLMASA
+bile şehri saran devasa olaylar paylaşmaya değerdir: stadyum/arena
+seviyesinde dünya turnesi konserleri (uluslararası bir megastarın
+Olympiastadion veya Olympiahalle konseri gibi), Oktoberfest çapında dev
+şehir etkinlikleri, tarihi finaller, şehir hayatını etkileyen büyük
+olaylar. Bunlara 6-8 ver. Ancak rutin Bundesliga maçları, orta boy
+konserler, sıradan festival ve mekan haberleri bu kapsama GİRMEZ (1-4).
+
+Özel kural — Türkiye ulusal medyası (TRT, NTV, Hürriyet gibi kaynaklar):
+Münih'teki Türkler Türkiye gündemini zaten başka yerlerden takip ediyor.
+Bu kaynaklardan gelen içerik SADECE şu durumlarda 6+ almalı:
+(a) tarihi çapta olay (büyük deprem, darbe girişimi, seçim sonucu,
+milli takımın büyük başarısı) veya (b) Almanya'daki Türkleri doğrudan
+etkileyen gelişme (vize, gurbetçi düzenlemeleri, çifte vatandaşlık,
+Türkiye-Almanya ilişkileri). Rutin iç siyaset, magazin ve
+üçüncü ülke haberleri düşük puan almalı.
+
 İçerik:
 Kaynak: {source}
 Başlık: {title}
@@ -89,3 +107,4 @@ def classify_all(items: list[dict], min_score: int = 6) -> list[dict]:
         if result["puan"] >= min_score:
             winners.append({**it, **result})
     return winners
+
