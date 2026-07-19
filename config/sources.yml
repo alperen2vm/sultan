@@ -2,21 +2,26 @@
 # KAYNAK LİSTESİ
 # ------------------------------------------------------------
 # type: rss   -> feedparser ile okunur
-# type: html  -> requests + BeautifulSoup ile okunur (selector gerekli)
+# type: html  -> requests + BeautifulSoup ile okunur
 #
-# trusted: true  -> prefilter ATLANIR, her yeni içerik direkt LLM'e gider
-#                   (konsolosluk gibi "her duyurusu ilgili" kaynaklar için)
+# trusted: true        -> prefilter atlanır, her yeni içerik LLM'e gider
+# keyword_list: <isim> -> hangi kelime grubuyla filtreleneceği
+#                         (varsayılan: "default", Türk ulusal medya
+#                          için: "turkey_major")
 #
-# NOT: RSS adresleri zamanla değişebiliyor. Kurulumdan sonra
+# Kurulumdan sonra şunu çalıştırıp 0 item dönen kaynakları düzelt:
 #   python -m src.main --test-sources
-# komutuyla hangi feed'lerin çalıştığını test et, ölüleri düzelt.
 # ============================================================
 
 sources:
-  # ---------- Yerel medya (Münih) ----------
+  # ================= MÜNİH / BAVYERA MEDYASI =================
   - name: "Merkur München"
     type: rss
     url: "https://www.merkur.de/lokales/muenchen/rssfeed.rdf"
+
+  - name: "Merkur Bayern"
+    type: rss
+    url: "https://www.merkur.de/bayern/rssfeed.rdf"
 
   - name: "tz München"
     type: rss
@@ -30,26 +35,67 @@ sources:
     type: rss
     url: "https://www.abendzeitung-muenchen.de/storage/rss/rss/muenchen-news-abendzeitung.xml"
 
-  # ---------- Türkçe / diaspora medyası ----------
-  # (Almanya geneli haberler için; LLM "Münih'le ilgisi var mı"ya da bakacak)
-  # Buraya takip etmek istediğin Türkçe kaynakların RSS'lerini ekle.
+  - name: "Abendzeitung Bayern"
+    type: rss
+    url: "https://www.abendzeitung-muenchen.de/storage/rss/rss/bayern-abendzeitung.xml"
 
-  # ---------- Resmi / konsolosluk ----------
+  - name: "Abendzeitung Kultur"
+    # Konser ve etkinlik duyuruları için değerli
+    type: rss
+    url: "https://www.abendzeitung-muenchen.de/storage/rss/rss/kultur-news-abendzeitung.xml"
+
+  - name: "BR24"
+    # Adres --test-sources ile doğrulanmalı; 0 dönerse br.de'de "RSS" ara
+    type: rss
+    url: "https://www.br.de/nachrichten/rss"
+
+  # ================= TÜRKİYE ULUSAL MEDYASI ==================
+  # DİKKAT: Bu kaynaklar dar "turkey_major" listesiyle filtrelenir.
+  # Sadece deprem/seçim/milli takım gibi büyük olaylar ve
+  # Almanya/gurbetçi/vize içeren haberler geçer.
+
+  - name: "TRT Haber Son Dakika"
+    type: rss
+    url: "https://www.trthaber.com/sondakika.rss"
+    keyword_list: turkey_major
+
+  - name: "NTV Gündem"
+    type: rss
+    url: "https://www.ntv.com.tr/gundem.rss"
+    keyword_list: turkey_major
+
+  - name: "Hürriyet Anasayfa"
+    type: rss
+    url: "https://www.hurriyet.com.tr/rss/anasayfa"
+    keyword_list: turkey_major
+
+  # ================= RESMİ / KONSOLOSLUK =====================
   - name: "T.C. Münih Başkonsolosluğu Duyurular"
     type: html
     url: "https://munih-bk.mfa.gov.tr/Mission"
     trusted: true
-    # Sayfa yapısı değişirse bu selector'ları güncelle:
-    item_selector: "a"          # aday linkler
-    link_must_contain: "showannouncement" # href içinde geçmesi gereken kelime (kabaca filtre)
+    item_selector: "a"
+    link_must_contain: "showannouncement"
 
-  # ---------- Etkinlik / konser takvimleri ----------
-  # Eventim ve benzerlerinin resmi RSS'i yok; ilk fazda en pratik yol
-  # venue bazlı sayfaları HTML olarak taramak. Örnek iskelet:
-  - name: "Zenith München Programm"
+  # ================= ETKİNLİK / KONSER =======================
+  # Venue sayfalarının resmi RSS'i yok; HTML taraması için her sitenin
+  # kendi selector'u ayarlanmalı. Şablonlar aşağıda kapalı duruyor —
+  # açmak istersen selector'u siteye göre ayarlamak gerekiyor,
+  # bunu birlikte yaparız.
+  - name: "Muffatwerk Events"
     type: html
-    url: "https://muffatwerk.de/de/events"   # örnek — kendi venue listeni koy
-    item_selector: "a.event-link"            # siteye göre güncelle
-    enabled: false                           # selector ayarlanana kadar kapalı
+    url: "https://muffatwerk.de/de/events"
+    item_selector: "a"
+    enabled: false
 
-# Kapalı (enabled: false) kaynaklar taranmaz.
+  - name: "Backstage München"
+    type: html
+    url: "https://backstage.eu/veranstaltungen/live.html"
+    item_selector: "a"
+    enabled: false
+
+  - name: "Olympiapark Events"
+    type: html
+    url: "https://www.olympiapark.de/de/veranstaltungen-tickets/veranstaltungen"
+    item_selector: "a"
+    enabled: false
