@@ -16,7 +16,7 @@ import yaml
 
 from src import classifier, concerts, fetchers, notifier, prefilter, state
 
-MIN_SCORE = 6  # bu puanın altındakiler Telegram'a düşmez
+MIN_SCORE = 4  # bu puanın altındakiler Telegram'a düşmez
 
 
 def load_config():
