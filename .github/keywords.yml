@@ -1,0 +1,55 @@
+# ============================================================
+# KAYNAK LİSTESİ
+# ------------------------------------------------------------
+# type: rss   -> feedparser ile okunur
+# type: html  -> requests + BeautifulSoup ile okunur (selector gerekli)
+#
+# trusted: true  -> prefilter ATLANIR, her yeni içerik direkt LLM'e gider
+#                   (konsolosluk gibi "her duyurusu ilgili" kaynaklar için)
+#
+# NOT: RSS adresleri zamanla değişebiliyor. Kurulumdan sonra
+#   python -m src.main --test-sources
+# komutuyla hangi feed'lerin çalıştığını test et, ölüleri düzelt.
+# ============================================================
+
+sources:
+  # ---------- Yerel medya (Münih) ----------
+  - name: "Merkur München"
+    type: rss
+    url: "https://www.merkur.de/lokales/muenchen/rssfeed.rdf"
+
+  - name: "tz München"
+    type: rss
+    url: "https://www.tz.de/muenchen/rssfeed.rdf"
+
+  - name: "Süddeutsche München"
+    type: rss
+    url: "https://rss.sueddeutsche.de/rss/Muenchen"
+
+  - name: "Abendzeitung München"
+    type: rss
+    url: "https://www.abendzeitung-muenchen.de/rss"
+
+  # ---------- Türkçe / diaspora medyası ----------
+  # (Almanya geneli haberler için; LLM "Münih'le ilgisi var mı"ya da bakacak)
+  # Buraya takip etmek istediğin Türkçe kaynakların RSS'lerini ekle.
+
+  # ---------- Resmi / konsolosluk ----------
+  - name: "T.C. Münih Başkonsolosluğu Duyurular"
+    type: html
+    url: "https://munih.bk.mfa.gov.tr/Mission"
+    trusted: true
+    # Sayfa yapısı değişirse bu selector'ları güncelle:
+    item_selector: "a"          # aday linkler
+    link_must_contain: "duyuru" # href içinde geçmesi gereken kelime (kabaca filtre)
+
+  # ---------- Etkinlik / konser takvimleri ----------
+  # Eventim ve benzerlerinin resmi RSS'i yok; ilk fazda en pratik yol
+  # venue bazlı sayfaları HTML olarak taramak. Örnek iskelet:
+  - name: "Zenith München Programm"
+    type: html
+    url: "https://muffatwerk.de/de/events"   # örnek — kendi venue listeni koy
+    item_selector: "a.event-link"            # siteye göre güncelle
+    enabled: false                           # selector ayarlanana kadar kapalı
+
+# Kapalı (enabled: false) kaynaklar taranmaz.
