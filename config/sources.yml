@@ -28,7 +28,7 @@ sources:
 
   - name: "Abendzeitung München"
     type: rss
-    url: "https://www.abendzeitung-muenchen.de/rss"
+    url: "https://www.abendzeitung-muenchen.de/storage/rss/rss/muenchen-news-abendzeitung.xml"
 
   # ---------- Türkçe / diaspora medyası ----------
   # (Almanya geneli haberler için; LLM "Münih'le ilgisi var mı"ya da bakacak)
@@ -37,11 +37,11 @@ sources:
   # ---------- Resmi / konsolosluk ----------
   - name: "T.C. Münih Başkonsolosluğu Duyurular"
     type: html
-    url: "https://munih.bk.mfa.gov.tr/Mission"
+    url: "https://munih-bk.mfa.gov.tr/Mission"
     trusted: true
     # Sayfa yapısı değişirse bu selector'ları güncelle:
     item_selector: "a"          # aday linkler
-    link_must_contain: "duyuru" # href içinde geçmesi gereken kelime (kabaca filtre)
+    link_must_contain: "showannouncement" # href içinde geçmesi gereken kelime (kabaca filtre)
 
   # ---------- Etkinlik / konser takvimleri ----------
   # Eventim ve benzerlerinin resmi RSS'i yok; ilk fazda en pratik yol
