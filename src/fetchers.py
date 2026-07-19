@@ -21,6 +21,7 @@ def fetch_rss(source: dict) -> list[dict]:
             "summary": (entry.get("summary") or entry.get("description") or "").strip(),
             "link": (entry.get("link") or "").strip(),
             "trusted": source.get("trusted", False),
+            "keyword_list": source.get("keyword_list", "default"),
         })
     return items
 
@@ -54,6 +55,7 @@ def fetch_html(source: dict) -> list[dict]:
             "summary": "",
             "link": href,
             "trusted": source.get("trusted", False),
+            "keyword_list": source.get("keyword_list", "default"),
         })
     return items[:40]
 
