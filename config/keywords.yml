@@ -1,0 +1,57 @@
+# ============================================================
+# PREFILTER KELİME LİSTESİ
+# ------------------------------------------------------------
+# Amaç: LLM'e gidecek hacmi küçültmek (maliyet = 0 kalsın diye).
+# Başlık + özet metninde bu kelimelerden HERHANGİ BİRİ geçerse
+# içerik LLM sınıflandırmasına gönderilir.
+# Eşleşme küçük/büyük harf duyarsız yapılır.
+# ============================================================
+
+keywords:
+  # Genel Türk / Türkiye
+  - "türk"
+  - "türkisch"
+  - "türkei"
+  - "turkish"
+  - "türkiye"
+
+  # Resmi / hukuki konular
+  - "konsulat"
+  - "başkonsolosluk"
+  - "doppelpass"
+  - "doppelte staatsbürgerschaft"
+  - "einbürgerung"
+  - "aufenthalt"
+  - "niederlassungserlaubnis"
+  - "visum"
+  - "ausländerbehörde"
+  - "kvr"
+
+  # Din / kültür / topluluk
+  - "moschee"
+  - "ditib"
+  - "ramadan"
+  - "ramazan"
+  - "bayram"
+  - "zuckerfest"
+  - "opferfest"
+
+  # Konser yakalamak için sanatçı isimleri (genişletilebilir —
+  # asıl listen zamanla büyüyecek, buraya eklemen yeterli)
+  - "tarkan"
+  - "sezen aksu"
+  - "mabel matiz"
+  - "duman"
+  - "teoman"
+  - "mor ve ötesi"
+  - "sertab erener"
+  - "ezhel"
+  - "melike şahin"
+  - "zeynep bastık"
+  - "kenan doğulu"
+  - "athena"
+  - "manga"
+  - "sıla"
+  - "simge"
+  - "emir can iğrek"
+  - "altın gün"
