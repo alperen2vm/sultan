@@ -49,6 +49,14 @@ def main():
         print(f"\n[TEST] Toplam {len(items)} item çekildi. Kaynak testi bitti.")
         return
 
+    # 1.5 Tarama içi dedup: aynı link iki feed'den gelirse teke indir
+    unique, seen_links = [], set()
+    for it in items:
+        if it["link"] not in seen_links:
+            unique.append(it)
+            seen_links.add(it["link"])
+    items = unique
+
     # 2. Dedup
     seen = state.load()
     items = state.filter_new(items, seen)
@@ -56,10 +64,13 @@ def main():
     # 3. Prefilter
     candidates = prefilter.apply(items, keyword_groups)
 
-    # 4. LLM sınıflandırma
-    winners, attempted, failed = classifier.classify_all(candidates, min_score=MIN_SCORE)
+    # 4. LLM sınıflandırma (toplu)
+    winners, evaluated, hard_failed, quota_hit = classifier.classify_all(
+        candidates, min_score=MIN_SCORE)
+    deferred = [c for c in candidates if c not in evaluated]
     print(f"[SONUÇ] {len(winners)} item eşiği geçti "
-          f"({attempted} değerlendirildi, {failed} LLM hatası)")
+          f"({len(evaluated)} değerlendirildi, {hard_failed} hata, "
+          f"{len(deferred)} ertelendi)")
 
     # 5. Telegram + state güncelle
     # Not: sadece LLM'e giden adayları değil, TÜM yeni item'ları seen'e
@@ -74,7 +85,9 @@ def main():
             if notifier.send(it):
                 sent_ok += 1
 
-    state.mark_seen(seen, items)
+    deferred_links = {c["link"] for c in deferred}
+    to_remember = [it for it in items if it["link"] not in deferred_links]
+    state.mark_seen(seen, to_remember)
     state.save(seen)
 
     # Günlük kalp atışı: konser taraması günde bir çalıştığı için oraya
@@ -91,9 +104,12 @@ def main():
 
     # Sessiz ölüm koruması: toplu hata varsa run KIRMIZI yansın ki
     # Actions listesinde anında görülsün.
-    if attempted > 0 and failed == attempted:
-        print("[HATA] Tüm LLM çağrıları başarısız — GEMINI_API_KEY "
-              "geçersiz veya kota dolmuş olabilir")
+    if quota_hit:
+        print("[UYARI] Günlük LLM kotası doldu — sistem sağlıklı, "
+              "ertelenen adaylar kota yenilenince işlenecek")
+    if len(evaluated) > 0 and hard_failed == len(evaluated):
+        print("[HATA] Tüm LLM çağrıları kota dışı nedenle başarısız — "
+              "GEMINI_API_KEY geçersiz olabilir")
         sys.exit(1)
     if send_attempts > 0 and sent_ok == 0:
         print("[HATA] Hiçbir Telegram mesajı iletilemedi — bot'a Start'a "
