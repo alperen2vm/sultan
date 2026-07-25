@@ -2,10 +2,10 @@ name: konser-scan
 
 on:
   schedule:
-    # Her gün 06:17 UTC (yazın 08:17 Münih saati). Dakika bilerek
+    # Günde iki kez: 06:17 ve 17:17 UTC. Dakika bilerek
     # :00/:30'dan farklı seçildi ki haber taramasıyla aynı anda
     # çalışıp state dosyasında çakışmasınlar.
-    - cron: "17 6 * * *"
+    - cron: "17 6,17 * * *"
   workflow_dispatch: {}
 
 permissions:
