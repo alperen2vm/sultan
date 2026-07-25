@@ -215,3 +215,23 @@ turkey_major:
   - "vize"
   - "schengen"
   - "çifte vatandaşlık"
+
+# ============================================================
+# Almanya ULUSAL medyası (Tagesschau vb.) için liste:
+# Türk/Türkiye bağlantısı VEYA Münih geçen her haber gönderilir.
+# ============================================================
+germany_national:
+  - "türk"
+  - "türkisch"
+  - "türkischstämmig"
+  - "türkei"
+  - "türkiye"
+  - "erdoğan"
+  - "erdogan"
+  - "münchen"
+  - "doppelpass"
+  - "doppelte staatsbürgerschaft"
+  - "staatsbürgerschaft"
+  - "einbürgerung"
+  - "moschee"
+  - "ditib"

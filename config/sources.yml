@@ -50,10 +50,10 @@ sources:
 
   # ================= ALMANYA ULUSAL MEDYASI ==================
   - name: "Tagesschau"
-    # Almanya gündemi: Türkiye/Türk toplumu ile ilgili ulusal haberler +
-    # mega olaylar default listeyle süzülür
+    # Türk/Türkiye bağlantılı VEYA Münih geçen her ulusal haber gönderilir
     type: rss
     url: "https://www.tagesschau.de/infoservices/alle-meldungen-100~rss2.xml"
+    keyword_list: germany_national
 
   # ================= TÜRKİYE ULUSAL MEDYASI ==================
   # DİKKAT: Bu kaynaklar dar "turkey_major" listesiyle filtrelenir.
