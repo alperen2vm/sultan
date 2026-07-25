@@ -38,6 +38,8 @@ def fetch_html(source: dict) -> list[dict]:
     soup = BeautifulSoup(resp.text, "html.parser")
 
     must_contain = source.get("link_must_contain", "")
+    best: dict[str, str] = {}  # link -> o linke işaret eden EN UZUN yazı
+    order: list[str] = []
     for a in soup.select(source.get("item_selector", "a")):
         href = (a.get("href") or "").strip()
         text = a.get_text(" ", strip=True)
@@ -45,19 +47,24 @@ def fetch_html(source: dict) -> list[dict]:
             continue  # boş / çok kısa linkler gürültüdür
         if must_contain and must_contain not in href.lower():
             continue
-        # göreli linkleri mutlaklaştır
-        if href.startswith("/"):
+        if href.startswith("/"):  # göreli linkleri mutlaklaştır
             base = source["url"].split("/", 3)
             href = f"{base[0]}//{base[2]}{href}"
+        if href not in best:
+            order.append(href)
+            best[href] = text
+        elif len(text) > len(best[href]):
+            best[href] = text  # "Detayları gör" değil gerçek başlık kalsın
+    for href in order[:40]:
         items.append({
             "source": source["name"],
-            "title": text[:200],
+            "title": best[href][:200],
             "summary": "",
             "link": href,
             "trusted": source.get("trusted", False),
             "keyword_list": source.get("keyword_list", "default"),
         })
-    return items[:40]
+    return items
 
 
 def fetch_source(source: dict) -> list[dict]:
