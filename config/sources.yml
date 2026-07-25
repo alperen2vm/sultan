@@ -105,3 +105,20 @@ sources:
     url: "https://www.olympiapark.de/de/veranstaltungen-tickets/veranstaltungen"
     item_selector: "a"
     enabled: false
+
+  # ============ TÜRK DİASPORA ETKİNLİK PLATFORMU ============
+  # eventturk.de: Avrupa'daki Türkçe konser/tiyatro/stand-up kataloğu.
+  # Tüm kıtayı listelediği için "gidilebilir şehir" filtresi uygulanır
+  # (bavaria_reach listesi) — Berlin konseri elenir, Münih/Stuttgart geçer.
+  - name: "Event Türk (RSS)"
+    type: rss
+    url: "https://eventturk.de/feed/"
+    keyword_list: bavaria_reach
+
+  - name: "Event Türk (liste)"
+    # RSS bir gün kapanırsa yedek: etkinlik listesinin HTML taraması
+    type: html
+    url: "https://eventturk.de/etkinlik/"
+    item_selector: "a"
+    link_must_contain: "/etkinlik/"
+    keyword_list: bavaria_reach

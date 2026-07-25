@@ -235,3 +235,24 @@ germany_national:
   - "einbürgerung"
   - "moschee"
   - "ditib"
+
+# ============================================================
+# "Gidilebilir mesafe" şehir filtresi — Event Türk gibi tüm
+# Avrupa'yı listeleyen kaynaklar için. Listeye şehir ekleyip
+# çıkararak kapsama alanını kendin ayarlarsın.
+# ============================================================
+bavaria_reach:
+  - "münchen"
+  - "muenchen"
+  - "munchen"
+  - "münih"
+  - "nürnberg"
+  - "nuernberg"
+  - "nurnberg"
+  - "augsburg"
+  - "ingolstadt"
+  - "regensburg"
+  - "ulm"
+  - "stuttgart"
+  - "salzburg"
+  - "bayern"
