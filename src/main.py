@@ -1,29 +1,42 @@
-"""Münih Radar — ana akış.
+"""Münih Radar — ana akış (LLM'siz, saf kelime eşleşmeli mimari).
 
-Akış: kaynakları tara -> dedup -> keyword prefilter -> LLM puanla -> Telegram'a gönder
+Mantık: Eşleşen her içerik DİREKT Telegram'a gider. Puanlama, API
+anahtarı, kota — hiçbiri yok. Seçiciliği kullanıcı yapar.
+
+Kural özeti:
+- Münih yerel basını  -> keyword listesi + sanatçı listesi eşleşmesi
+- Tagesschau          -> türk/türkiye/münchen vb. (germany_national)
+- Türk ulusal medyası -> dar "büyük olay" listesi (turkey_major)
+- Konsolosluk/konser  -> filtresiz, her yeni içerik gider
 
 Çalıştırma:
     python -m src.main                  # normal tarama (haber + duyuru)
     python -m src.main --concerts       # sanatçı listesinden konser taraması
-    python -m src.main --test-sources   # sadece kaynakları test et (LLM/Telegram yok)
-    python -m src.main --dry-run        # her şeyi yap ama Telegram'a gönderme
+    python -m src.main --test-sources   # sadece kaynakları test et
+    python -m src.main --dry-run        # her şeyi yap ama gönderme
     python -m src.main --ping           # sadece Telegram bağlantısını test et
 """
 
 import sys
+import time
 from pathlib import Path
 
 import yaml
 
-from src import classifier, concerts, fetchers, notifier, prefilter, state
+from src import concerts, fetchers, notifier, prefilter, state
 
-MIN_SCORE = 4  # bu puanın altındakiler Telegram'a düşmez (başlangıç: bol aday)
+SEND_SLEEP_S = 3  # Telegram'ın chat başına hız limitine takılmamak için
 
 
 def load_config():
     sources = yaml.safe_load(Path("config/sources.yml").read_text())["sources"]
-    # keywords.yml artık gruplu: {"default": [...], "turkey_major": [...]}
     keyword_groups = yaml.safe_load(Path("config/keywords.yml").read_text())
+    # Sanatçı isimleri de eşleşme listesidir: yerel basında veya
+    # Tagesschau'da bir sanatçının adı geçiyorsa bizi ilgilendirir.
+    artists = yaml.safe_load(Path("config/artists.yml").read_text())["artists"]
+    artist_lows = [a.lower() for a in artists]
+    for group in ("default", "germany_national"):
+        keyword_groups[group] = keyword_groups[group] + artist_lows
     return sources, keyword_groups
 
 
@@ -57,42 +70,32 @@ def main():
             seen_links.add(it["link"])
     items = unique
 
-    # 2. Dedup
+    # 2. Daha önce görülenleri ele
     seen = state.load()
     items = state.filter_new(items, seen)
 
-    # 3. Prefilter
-    candidates = prefilter.apply(items, keyword_groups)
+    # 3. Kelime eşleşmesi — eşleşen herkes kazanır, hakem yok
+    winners = prefilter.apply(items, keyword_groups)
+    print(f"[SONUÇ] {len(winners)} eşleşme bildirilecek")
 
-    # 4. LLM sınıflandırma (toplu)
-    winners, evaluated, hard_failed, quota_hit = classifier.classify_all(
-        candidates, min_score=MIN_SCORE)
-    deferred = [c for c in candidates if c not in evaluated]
-    print(f"[SONUÇ] {len(winners)} item eşiği geçti "
-          f"({len(evaluated)} değerlendirildi, {hard_failed} hata, "
-          f"{len(deferred)} ertelendi)")
-
-    # 5. Telegram + state güncelle
-    # Not: sadece LLM'e giden adayları değil, TÜM yeni item'ları seen'e
-    # yazıyoruz — düşük puanlılar bir daha değerlendirilmesin diye.
+    # 4. Telegram
     sent_ok = 0
     send_attempts = 0
     for it in winners:
         if dry_run:
             print(f"[DRY-RUN] Gönderilecekti: {it['title'][:70]}")
-        else:
-            send_attempts += 1
-            if notifier.send(it):
-                sent_ok += 1
+            continue
+        send_attempts += 1
+        if notifier.send(it):
+            sent_ok += 1
+        time.sleep(SEND_SLEEP_S)
 
-    deferred_links = {c["link"] for c in deferred}
-    to_remember = [it for it in items if it["link"] not in deferred_links]
-    state.mark_seen(seen, to_remember)
+    # 5. State güncelle (eşleşmeyenler dahil hepsi görüldü sayılır)
+    state.mark_seen(seen, items)
     state.save(seen)
 
     # Günlük kalp atışı: konser taraması günde bir çalıştığı için oraya
-    # bağlı — her gün EN AZ bir mesaj garantisi. Gelmiyorsa sistem
-    # bozuktur ve run kırmızı yanar; "sessiz ölüm" artık imkansız.
+    # bağlı — her gün EN AZ bir mesaj garantisi.
     if concerts_mode and not dry_run:
         heartbeat = ("📡 Günlük radar raporu: sistem çalışıyor.\n"
                      f"Konser taraması: {len(items)} yeni bulgu, "
@@ -102,18 +105,10 @@ def main():
                   "TELEGRAM_CHAT_ID kontrol edilmeli")
             sys.exit(1)
 
-    # Sessiz ölüm koruması: toplu hata varsa run KIRMIZI yansın ki
-    # Actions listesinde anında görülsün.
-    if quota_hit:
-        print("[UYARI] Günlük LLM kotası doldu — sistem sağlıklı, "
-              "ertelenen adaylar kota yenilenince işlenecek")
-    if len(evaluated) > 0 and hard_failed == len(evaluated):
-        print("[HATA] Tüm LLM çağrıları kota dışı nedenle başarısız — "
-              "GEMINI_API_KEY geçersiz olabilir")
-        sys.exit(1)
+    # Sessiz ölüm koruması: gönderim tümden çöktüyse run kırmızı yansın
     if send_attempts > 0 and sent_ok == 0:
-        print("[HATA] Hiçbir Telegram mesajı iletilemedi — bot'a Start'a "
-              "bastığından ve token/chat_id doğruluğundan emin ol")
+        print("[HATA] Hiçbir Telegram mesajı iletilemedi — token/chat_id "
+              "kontrol edilmeli")
         sys.exit(1)
     print("[BİTTİ]")
 

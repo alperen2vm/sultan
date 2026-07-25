@@ -1,32 +1,28 @@
-"""Telegram'a bildirim gönderme."""
+"""Telegram'a bildirim gönderme (LLM'siz format: başlık + kaynak + link)."""
 
 import html
 import os
 
 import requests
 
-EMOJI = {
-    "konser": "\U0001F3A4",     # mikrofon
-    "etkinlik": "\U0001F389",   # konfeti
-    "resmi": "\U0001F3DB",      # resmi bina
-    "haber": "\U0001F4F0",      # gazete
-    "diger": "\U0001F4CC",      # raptiye
-}
+
+def _emoji(item: dict) -> str:
+    source = item.get("source", "").lower()
+    title = item.get("title", "")
+    if "bandsintown" in source or "ticketmaster" in source or title.startswith("KONSER"):
+        return "\U0001F3A4"  # mikrofon
+    if "başkonsolos" in source or "konsolos" in source:
+        return "\U0001F3DB"  # resmi bina
+    return "\U0001F4F0"      # gazete
 
 
 def send(item: dict) -> bool:
     token = os.environ["TELEGRAM_BOT_TOKEN"]
     chat_id = os.environ["TELEGRAM_CHAT_ID"]
 
-    emoji = EMOJI.get(item.get("kategori", "diger"), EMOJI["diger"])
-    title = html.escape(item["title"])
-    ozet = html.escape(item.get("ozet", ""))
-    source = html.escape(item["source"])
-
     text = (
-        f"{emoji} <b>{title}</b>\n\n"
-        f"{ozet}\n\n"
-        f"Puan: {item.get('puan', '?')}/10 | Kaynak: {source}\n"
+        f"{_emoji(item)} <b>{html.escape(item['title'])}</b>\n\n"
+        f"Kaynak: {html.escape(item['source'])}\n"
         f"{item['link']}"
     )
 
@@ -39,6 +35,7 @@ def send(item: dict) -> bool:
     if not ok:
         print(f"[TELEGRAM HATA] {resp.status_code}: {resp.text[:200]}")
     return ok
+
 
 def send_text(text: str) -> bool:
     """Düz metin mesajı gönderir (kalp atışı / test için)."""
